@@ -186,7 +186,7 @@ SparseTensor tensor_times_matrix_cuda(SparseTensor& X, Tensor& U, size_t mode, C
         if(m != mode) {
             Y_shape[m] = X.shape(cpu)[m];
         } else {
-            Y_shape[m] = nrows;
+            Y_shape[m] = ncols;
         }
     }
     bool const* X_is_dense = X.is_dense(cpu);
@@ -214,8 +214,13 @@ SparseTensor tensor_times_matrix_cuda(SparseTensor& X, Tensor& U, size_t mode, C
     timer_setidx.print_elapsed_time("CUDA TTM SetIdx");
     printf("Fiberidx length = %zu\n", fiberidx.size());
 
+    size_t free_mem;
+    size_t total_mem;
+    cudaMemGetInfo(&free_mem, &total_mem); 
+    printf("Free mem: %f\n", ((double) free_mem) * 1e-9);
     Scalar* X_values = X.values(cuda_dev->mem_node);
-    printf("X_values\n");
+    cudaMemGetInfo(&free_mem, &total_mem); 
+    printf("X_values (free mem: %f)\n", ((double) free_mem) * 1e-9);
     Scalar* Y_values = Y.values(cuda_dev->mem_node);
     printf("Y_values\n");
     Scalar* U_values = U.values(cuda_dev->mem_node);
@@ -278,12 +283,6 @@ SparseTensor tensor_times_matrix_cuda(SparseTensor& X, Tensor& U, size_t mode, C
     // std::fprintf(stderr, "[CUDA TTM Kernel] Launch ttm_cuda_kernel<<<%zu, (%zu, %zu), 0>>()\n", Y.num_chunks, Y_num_subchunks, kernel_blockDim_y);
     // ttm_cuda_kernel<<<Y.num_chunks, dim3(Y_num_subchunks, kernel_blockDim_y), 0>>>(dev_fiberidx, X_indices_m, nrows, ncols, Y.chunk_size, Y_subchunk_size, X.chunk_size, Ustride, Y_values, X_values, U_values);
 
-//     printf("[CUDA SpTns * Mtx] spt_TTMRankRBNnzKernelSM<<<%lu, (%lu, %lu), %lu>>>\n", nblocks, nthreadsx, nthreadsy, shmen_size);
-// spt_TTMRankRBNnzKernelSM<<<nblocks, dimBlock, shmen_size>>>(
-//     dev_fiberidx, X_indices_m, nrows, ncols, Ustride,
-//     Y.chunk_size, Y.num_chunks, X.num_chunks, X_values, U_values, Y_values);
-
-    printf("[CUDA SpTns * Mtx] spt_TTMRankRBNnzKernelSM<<<%lu, (%lu, %lu), %lu>>>\n", nblocks, nthreadsx, nthreadsy, shmen_size);
     spt_TTMRankRBNnzKernelSM<<<nblocks, dimBlock, shmen_size>>>(
         Y_values, Y.chunk_size, Y.num_chunks,
         X_values, X.num_chunks, X_indices_m,

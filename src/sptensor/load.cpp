@@ -21,9 +21,11 @@
 #include <memory>
 #include <ParTI/error.hpp>
 
+#include <unistd.h>
+
 namespace pti {
 
-SparseTensor SparseTensor::load(std::FILE* fp, size_t start_index) {
+SparseTensor SparseTensor::load(std::FILE* fp, size_t start_index, size_t n_lines) {
     int io_result;
 
     size_t nmodes;
@@ -39,7 +41,10 @@ SparseTensor SparseTensor::load(std::FILE* fp, size_t start_index) {
     std::unique_ptr<bool[]> mode_is_dense(new bool [nmodes]());
 
     SparseTensor tensor(nmodes, coordinate.get(), mode_is_dense.get());
+    if (n_lines)
+        tensor.reserve(n_lines);
 
+    int i = 0;
     for(;;) {
         for(size_t m = 0; m < nmodes; ++m) {
             io_result = std::fscanf(fp, "%zu", &coordinate[m]);
@@ -49,11 +54,14 @@ SparseTensor SparseTensor::load(std::FILE* fp, size_t start_index) {
         double value;
         io_result = std::fscanf(fp, "%lg", &value);
         if(io_result != 1) break;
-        tensor.append(coordinate.get(), value);
+        // tensor.append(coordinate.get(), value);
+        tensor.put(i, coordinate.get(), value);
+        ++i;
+
     }
     ptiCheckOSError(io_result != 1 && !std::feof(fp));
 
-    tensor.sort_index();
+    // tensor.sort_index();
 
     return tensor;
 }

@@ -67,7 +67,7 @@ public:
 
     void dump(std::FILE* fp, size_t start_index = 0);
 
-    static SparseTensor load(std::FILE* fp, size_t start_index = 0);
+    static SparseTensor load(std::FILE* fp, size_t start_index = 0, size_t n_lines = 0);
 
     std::string to_string(bool sparse_format, size_t limit = 0);
 

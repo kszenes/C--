@@ -26,6 +26,8 @@
 
 using namespace pti;
 
+
+
 int main(int argc, char const* argv[]) {
     size_t mode = 0;
     bool dense_format = false;
@@ -57,7 +59,15 @@ int main(int argc, char const* argv[]) {
     session.print_devices();
 
     CFile fX(args[0], "r");
-    SparseTensor X = SparseTensor::load(fX, 1);
+    CFile fLines(args[0], "r");
+    int number_of_lines = 0;
+    int ch;
+    while (EOF != (ch=getc(fLines)))
+        if ('\n' == ch)
+            ++number_of_lines;
+    printf("nnz(X) = %u\n", number_of_lines - 2);
+    SparseTensor X = SparseTensor::load(fX, 1, number_of_lines - 2);
+    fLines.fclose();
     fX.fclose();
 
     std::printf("X = %s\n", X.to_string(!dense_format, limit).c_str());
@@ -68,6 +78,7 @@ int main(int argc, char const* argv[]) {
 
     std::printf("U = %s\n", U.to_string(limit).c_str());
     transpose_matrix_inplace(U, true, false, session.devices[device]);
+    std::printf("Transposing U...\n");
     std::printf("U = %s\n", U.to_string(limit).c_str());
 
     Timer timer(cpu);
