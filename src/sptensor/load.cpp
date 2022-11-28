@@ -41,8 +41,12 @@ SparseTensor SparseTensor::load(std::FILE* fp, size_t start_index, size_t n_line
     std::unique_ptr<bool[]> mode_is_dense(new bool [nmodes]());
 
     SparseTensor tensor(nmodes, coordinate.get(), mode_is_dense.get());
-    if (n_lines)
+    // preallocate space
+    if (n_lines) {
         tensor.reserve(n_lines);
+        tensor.indices_thrust_h = thrust::host_vector<ulong3>(n_lines);
+        tensor.indices_thrust_d = thrust::device_vector<ulong3>(n_lines);
+    }
 
     int i = 0;
     for(;;) {
@@ -55,6 +59,7 @@ SparseTensor SparseTensor::load(std::FILE* fp, size_t start_index, size_t n_line
         io_result = std::fscanf(fp, "%lg", &value);
         if(io_result != 1) break;
         // tensor.append(coordinate.get(), value);
+        // `put` if preallocated
         tensor.put(i, coordinate.get(), value);
         ++i;
 

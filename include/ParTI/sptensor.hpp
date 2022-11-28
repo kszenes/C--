@@ -26,6 +26,9 @@
 #include <ParTI/scalar.hpp>
 #include <ParTI/memblock.hpp>
 
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
+
 namespace pti {
 
 struct Tensor;
@@ -45,6 +48,8 @@ struct SparseTensor : public BaseTensor {
     size_t num_chunks;
 
     MemBlock<size_t[]>* indices;
+    thrust::host_vector<ulong3> indices_thrust_h;
+    thrust::device_vector<ulong3> indices_thrust_d;
 
     MemBlock<Scalar[]> values;
 
@@ -80,6 +85,8 @@ public:
 
     void sort_index();
     void sort_index(size_t const sparse_order[]);
+
+    void sort_thrust(bool cuda_dev = false);
 
     SparseTensor to_fully_sparse();
     SparseTensor to_fully_dense();

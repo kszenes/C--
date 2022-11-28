@@ -67,6 +67,15 @@ int main(int argc, char const* argv[]) {
             ++number_of_lines;
     printf("nnz(X) = %u\n", number_of_lines - 2);
     SparseTensor X = SparseTensor::load(fX, 1, number_of_lines - 2);
+    for (auto& e : X.indices_thrust_h) {
+        std::cout << e.x << ' ' << e.y << ' ' << e.z << '\n';
+    }
+    X.sort_thrust();
+    std::cout << "Sorted with Thrust\n";
+    for (auto& e : X.indices_thrust_h) {
+        std::cout << e.x << ' ' << e.y << ' ' << e.z << '\n';
+    }
+    std::cout << '\n';
     fLines.fclose();
     fX.fclose();
 

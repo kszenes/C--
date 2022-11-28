@@ -95,4 +95,37 @@ void SparseTensor::sort_index(size_t const sparse_order[]) {
     quick_sort_index(*this, 0, num_chunks, swap_buffer.get());
 }
 
+struct sort_indices_thrust {
+    // 3d
+    __device__ __host__ bool operator()(const ulong3 &a, const ulong3 &b){
+        return (a.y < b.y) || (a.y == b.y && a.z < b.z);
+    }
+    // 4d
+    // __device__ __host__ bool operator()(const Color &a, const Color &b){
+    //     return (a.y < b.y) || (a.y == b.y && a.z < b.z) || (a.y == b.y && a.z == b.z && a.w < b.w);
+    // }
+    // 2d (a.y < b.y)
+    // 3d (a.y < b.y) || (a.y == b.y && a.z < b.z)
+};
+
+void SparseTensor::sort_thrust(bool cuda_dev) {
+
+    if (cuda_dev) {
+        thrust::sort(
+            indices_thrust_d.begin(),
+            indices_thrust_d.end(),
+            pti::sort_indices_thrust()
+        );
+    }
+    else {
+        thrust::sort(
+            indices_thrust_h.begin(),
+            indices_thrust_h.end(),
+            pti::sort_indices_thrust()
+        );
+    }
+
+}
+
+
 }

@@ -1,12 +1,6 @@
 cmake_minimum_required(VERSION 3.18)
 project(ParTI)
 
-# if(USE_CUDA)
-#     file(GLOB_RECURSE TEST_SRCS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.cpp" "*.cu")
-# else()
-#     file(GLOB_RECURSE TEST_SRCS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.cpp")
-# endif()
-
 set(TEST_SRCS "test_ttm.cpp")
 
 foreach(TEST_SRC IN LISTS TEST_SRCS)
@@ -17,7 +11,7 @@ foreach(TEST_SRC IN LISTS TEST_SRCS)
         add_executable("${TEST_EXE}" "${TEST_SRC}" ${BACKWARD_ENABLE})
     endif()
     set_target_properties("${TEST_EXE}" PROPERTIES C_STANDARD 99)
-    set_target_properties("${TEST_EXE}" PROPERTIES CXX_STANDARD 11)
+    set_target_properties("${TEST_EXE}" PROPERTIES CXX_STANDARD 14)
     if(BUILD_STATIC)
         target_link_libraries("${TEST_EXE}" ParTI_s)
     else()
