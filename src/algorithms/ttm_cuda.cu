@@ -214,21 +214,11 @@ SparseTensor tensor_times_matrix_cuda(SparseTensor& X, Tensor& U, size_t mode, C
     timer_setidx.print_elapsed_time("CUDA TTM SetIdx");
     printf("Fiberidx length = %zu\n", fiberidx.size());
 
-    size_t free_mem;
-    size_t total_mem;
-    cudaMemGetInfo(&free_mem, &total_mem); 
-    printf("Free mem: %f\n", ((double) free_mem) * 1e-9);
     Scalar* X_values = X.values(cuda_dev->mem_node);
-    cudaMemGetInfo(&free_mem, &total_mem); 
-    printf("X_values (free mem: %f)\n", ((double) free_mem) * 1e-9);
     Scalar* Y_values = Y.values(cuda_dev->mem_node);
-    printf("Y_values\n");
     Scalar* U_values = U.values(cuda_dev->mem_node);
-    printf("U_values\n");
     size_t* X_indices_m = X.indices[mode](cuda_dev->mem_node);
-    printf("Allocating for fiberidx: %f GB\n", fiberidx.size() * sizeof(size_t) * 1e-9);
     size_t *dev_fiberidx = (size_t *) session.mem_nodes[cuda_dev->mem_node]->malloc(fiberidx.size() * sizeof (size_t));
-    printf("Allocated\n");
     session.mem_nodes[cuda_dev->mem_node]->memcpy_from(dev_fiberidx, fiberidx.data(), *session.mem_nodes[cpu], fiberidx.size() * sizeof (size_t));
 
     size_t Y_subchunk_size = X.chunk_size;
