@@ -52,31 +52,31 @@ int compare_indices(SparseTensor& tsr, size_t i, size_t j, size_t except) {
 }
 
 }
-void set_semisparse_indices_by_sparse_ref_thrust(SparseTensor& dest, std::vector<size_t>& fiber_idx, SparseTensor& ref, size_t mode) {
-    fiber_idx.push_back(0);
-    auto cur_tuple = ref.indices_thrust_h[0];
-    dest.indices_thrust_h.push_back(cur_tuple);
-    std::unique_ptr<size_t[]> indices(new size_t[dest.nmodes]{cur_tuple.x, cur_tuple.y, cur_tuple.z});
-    std::unique_ptr<Scalar[]> chunk(new Scalar [dest.chunk_size] ());
-    dest.append(indices.get(), chunk.get());
+// void set_semisparse_indices_by_sparse_ref_thrust(SparseTensor& dest, std::vector<size_t>& fiber_idx, SparseTensor& ref, size_t mode) {
+//     fiber_idx.push_back(0);
+//     auto cur_tuple = ref.indices_thrust_h[0];
+//     dest.indices_thrust_h.push_back(cur_tuple);
+//     std::unique_ptr<size_t[]> indices(new size_t[dest.nmodes]{cur_tuple.x, cur_tuple.y, cur_tuple.z});
+//     std::unique_ptr<Scalar[]> chunk(new Scalar [dest.chunk_size] ());
+//     dest.append(indices.get(), chunk.get());
 
-    auto prev_tuple = cur_tuple;
-    for (int i = 1; i < ref.num_chunks; ++i) {
-        cur_tuple = ref.indices_thrust_h[i];
-        if (prev_tuple.y != cur_tuple.y ||
-            prev_tuple.z != cur_tuple.z
-           ) {
-            fiber_idx.push_back(i);
-            dest.indices_thrust_h.push_back(cur_tuple);
-            std::unique_ptr<size_t[]> indices(new size_t[dest.nmodes]{cur_tuple.x, cur_tuple.y, cur_tuple.z});
-            // indices = {cur_tuple.x, cur_tuple.y, cur_tuple.z};
-            std::unique_ptr<Scalar[]> chunk(new Scalar [dest.chunk_size] ());
-            dest.append(indices.get(), chunk.get());
-            prev_tuple = cur_tuple;
-        }
-    }
-    fiber_idx.push_back(ref.num_chunks);
-}
+//     auto prev_tuple = cur_tuple;
+//     for (int i = 1; i < ref.num_chunks; ++i) {
+//         cur_tuple = ref.indices_thrust_h[i];
+//         if (prev_tuple.y != cur_tuple.y ||
+//             prev_tuple.z != cur_tuple.z
+//            ) {
+//             fiber_idx.push_back(i);
+//             dest.indices_thrust_h.push_back(cur_tuple);
+//             std::unique_ptr<size_t[]> indices(new size_t[dest.nmodes]{cur_tuple.x, cur_tuple.y, cur_tuple.z});
+//             // indices = {cur_tuple.x, cur_tuple.y, cur_tuple.z};
+//             std::unique_ptr<Scalar[]> chunk(new Scalar [dest.chunk_size] ());
+//             dest.append(indices.get(), chunk.get());
+//             prev_tuple = cur_tuple;
+//         }
+//     }
+//     fiber_idx.push_back(ref.num_chunks);
+// }
 
 void set_semisparse_indices_by_sparse_ref(SparseTensor& dest, std::vector<size_t>& fiber_idx, SparseTensor& ref, size_t mode) {
     size_t lastidx = ref.num_chunks;

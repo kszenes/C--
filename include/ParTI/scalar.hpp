@@ -22,6 +22,7 @@
 namespace pti {
 
 typedef float Scalar;
+using IndexType = size_t;
 
 }
 

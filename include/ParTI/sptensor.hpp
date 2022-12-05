@@ -28,6 +28,7 @@
 
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
+#include <vector>
 
 namespace pti {
 
@@ -49,16 +50,16 @@ struct SparseTensor : public BaseTensor {
 
     MemBlock<size_t[]>* indices;
     
-    thrust::host_vector<ulong> mode0_h;
-    thrust::host_vector<ulong> mode1_h;
-    thrust::host_vector<ulong> mode2_h;
-    thrust::device_vector<ulong> mode0_d;
-    thrust::device_vector<ulong> mode1_d;
-    thrust::device_vector<ulong> mode2_d;
-    using IntIterator = thrust::device_vector<ulong>::iterator;
+    std::vector<thrust::host_vector<IndexType>> modes_h;
+    std::vector<thrust::device_vector<IndexType>> modes_d;
+
+    using IntIterator = thrust::device_vector<IndexType>::iterator;
     using IteratorTuple = thrust::tuple<IntIterator, IntIterator, IntIterator>;
-    using IndexTuple = thrust::tuple<ulong, ulong, ulong>;
-    using  ZipIterator = thrust::zip_iterator<IteratorTuple>;
+    using IndexTuple = thrust::tuple<IndexType, IndexType, IndexType>;
+    using ZipIterator = thrust::zip_iterator<IteratorTuple>;
+
+    using IteratorTupleMode = thrust::tuple<IntIterator, IntIterator>;
+    using ZipIteratorMode = thrust::zip_iterator<IteratorTuple>;
 
     ZipIterator zip_it_d;
 

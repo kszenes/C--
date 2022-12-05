@@ -25,11 +25,11 @@ namespace pti {
 
 namespace {
 
-int compare_indices(SparseTensor& tsr, size_t i, size_t j) {
-    for(size_t m = 0; m < tsr.sparse_order.size(); ++m) {
-        size_t mode = tsr.sparse_order(cpu)[m];
-        size_t idx_i = tsr.indices[mode](cpu)[i];
-        size_t idx_j = tsr.indices[mode](cpu)[j];
+int compare_indices(SparseTensor& tsr, IndexType i, IndexType j) {
+    for(IndexType m = 0; m < tsr.sparse_order.size(); ++m) {
+        IndexType mode = tsr.sparse_order(cpu)[m];
+        IndexType idx_i = tsr.indices[mode](cpu)[i];
+        IndexType idx_j = tsr.indices[mode](cpu)[j];
         if(idx_i < idx_j) {
             return -1;
         } else if(idx_i > idx_j) {
@@ -39,8 +39,8 @@ int compare_indices(SparseTensor& tsr, size_t i, size_t j) {
     return 0;
 }
 
-void swap_values(SparseTensor& tsr, size_t i, size_t j, Scalar* swap_buffer) {
-    for(size_t m = 0; m < tsr.nmodes; ++m) {
+void swap_values(SparseTensor& tsr, IndexType i, IndexType j, Scalar* swap_buffer) {
+    for(IndexType m = 0; m < tsr.nmodes; ++m) {
         if(!tsr.is_dense(cpu)[m]) {
             std::swap(tsr.indices[m](cpu)[i], tsr.indices[m](cpu)[j]);
         }
@@ -52,8 +52,8 @@ void swap_values(SparseTensor& tsr, size_t i, size_t j, Scalar* swap_buffer) {
     std::memcpy(value_j,     swap_buffer, tsr.chunk_size * sizeof (Scalar));
 }
 
-void quick_sort_index(SparseTensor& tsr, size_t l, size_t r, Scalar* swap_buffer) {
-    size_t i, j, p;
+void quick_sort_index(SparseTensor& tsr, IndexType l, IndexType r, Scalar* swap_buffer) {
+    IndexType i, j, p;
     if(r-l < 2) {
         return;
     }
@@ -87,8 +87,8 @@ void SparseTensor::sort_index() {
     quick_sort_index(*this, 0, num_chunks, swap_buffer.get());
 }
 
-void SparseTensor::sort_index(size_t const sparse_order[]) {
-    std::memcpy(this->sparse_order(cpu), sparse_order, this->sparse_order.size() * sizeof (size_t));
+void SparseTensor::sort_index(IndexType const sparse_order[]) {
+    std::memcpy(this->sparse_order(cpu), sparse_order, this->sparse_order.size() * sizeof (IndexType));
 
     std::unique_ptr<Scalar[]> swap_buffer(new Scalar [chunk_size]);
 

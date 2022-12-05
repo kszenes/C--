@@ -69,7 +69,10 @@ int main(int argc, char const* argv[]) {
     fLines.fclose();
     fX.fclose();
     std::printf("X = %s\n", X.to_string(!dense_format, limit).c_str());
-    
+
+    for (int i = 0; i < number_of_lines - 2; ++i) {
+        std::cout << X.modes_d[0][i] << ' ' << X.modes_d[1][i] << ' ' << X.modes_d[2][i] << ' ' << X.values_thrust_d[i] << '\n';
+    }
     // Timer sort_timer(cpu);
     // sort_timer.start();
     // X.sort_thrust(true);
