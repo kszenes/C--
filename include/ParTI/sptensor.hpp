@@ -100,7 +100,7 @@ public:
     void sort_index();
     void sort_index(size_t const sparse_order[]);
 
-    void sort_thrust(bool cuda_dev = false);
+    void sort_thrust(bool cuda_dev=true, int mode=0);
 
     SparseTensor to_fully_sparse();
     SparseTensor to_fully_dense();

@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PTI_ALGORITHM_INCLUDED
-#define PTI_ALGORITHM_INCLUDED
+#ifndef ALGORITHM_H
+#define ALGORITHM_H
 
 #include <vector>
 #include <ParTI/device.hpp>
@@ -70,7 +70,7 @@ void set_semisparse_indices_by_sparse_ref(
 
 void set_semisparse_indices_by_sparse_ref_thrust(
     SparseTensor& dest,
-    std::vector<size_t>& fiber_idx,
+    thrust::device_vector<IndexType>& fiber_idx,
     SparseTensor& ref,
     size_t mode
 );
@@ -143,4 +143,4 @@ SparseTensor tensor_addition(
 );
 }
 
-#endif
+#endif /* ALGORITHM_H */

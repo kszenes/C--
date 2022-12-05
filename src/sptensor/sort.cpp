@@ -108,20 +108,43 @@ void SparseTensor::sort_index(IndexType const sparse_order[]) {
 //     // 3d (a.y < b.y) || (a.y == b.y && a.z < b.z)
 // };
 
-void SparseTensor::sort_thrust(bool cuda_dev) {
-    auto sort_zip_mode0 = []__host__ __device__ (
-        const IndexTuple& a, const IndexTuple& b 
-    ) {
-        return (thrust::get<1>(a) < thrust::get<1>(b)) ||
-               (thrust::get<1>(a) == thrust::get<1>(b) && thrust::get<2>(a) < thrust::get<2>(b));
-    };
-
+void SparseTensor::sort_thrust(bool cuda_dev, int mode) {
     if (cuda_dev) {
-        thrust::sort_by_key(
-            zip_it_d, zip_it_d + chunk_size * num_chunks,
-            values_thrust_d.begin(),
-            sort_zip_mode0
-        );
+        if (mode == 0) {
+            thrust::sort_by_key(
+                zip_it_d, zip_it_d + chunk_size * num_chunks,
+                values_thrust_d.begin(),
+                []__host__ __device__ (
+                const IndexTuple& a, const IndexTuple& b 
+            ) {
+                return (thrust::get<1>(a) < thrust::get<1>(b)) ||
+                    (thrust::get<1>(a) == thrust::get<1>(b) && thrust::get<2>(a) < thrust::get<2>(b));
+              }
+            );
+        } else if (mode == 1) {
+            thrust::sort_by_key(
+                zip_it_d, zip_it_d + chunk_size * num_chunks,
+                values_thrust_d.begin(),
+                []__host__ __device__ (
+                const IndexTuple& a, const IndexTuple& b 
+            ) {
+                return (thrust::get<0>(a) < thrust::get<0>(b)) ||
+                    (thrust::get<0>(a) == thrust::get<0>(b) && thrust::get<2>(a) < thrust::get<2>(b));
+              }
+            );
+        } else if (mode == 2) {
+            thrust::sort_by_key(
+                zip_it_d, zip_it_d + chunk_size * num_chunks,
+                values_thrust_d.begin(),
+                []__host__ __device__ (
+                const IndexTuple& a, const IndexTuple& b 
+            ) {
+                return (thrust::get<0>(a) < thrust::get<0>(b)) ||
+                    (thrust::get<0>(a) == thrust::get<0>(b) && thrust::get<1>(a) < thrust::get<1>(b));
+              }
+            );
+
+        }
     }
     // else {
     //     thrust::sort_by_key(
