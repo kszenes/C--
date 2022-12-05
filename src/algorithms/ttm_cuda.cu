@@ -179,7 +179,13 @@ SparseTensor tensor_times_matrix_cuda(SparseTensor& X, Tensor& U, size_t mode, C
         timer_sort.stop();
         timer_sort.print_elapsed_time("CUDA TTM Sort");
     }
+    Timer timer_thrust(cpu);
+    timer_thrust.start();
+    X.sort_thrust(true);
+    timer_thrust.stop();
+    timer_thrust.print_elapsed_time("THRUST SORT");
     std::printf("X = %s\n", X.to_string(1, 10).c_str());
+
 
     std::unique_ptr<size_t[]> Y_shape(new size_t [nmodes]);
     for(size_t m = 0; m < nmodes; ++m) {
@@ -208,18 +214,38 @@ SparseTensor tensor_times_matrix_cuda(SparseTensor& X, Tensor& U, size_t mode, C
     timer_setidx.start();
 
     std::vector<size_t> fiberidx;
-    set_semisparse_indices_by_sparse_ref(Y, fiberidx, X, mode);
+    // set_semisparse_indices_by_sparse_ref(Y, fiberidx, X, mode);
+    // set_semisparse_indices_by_sparse_ref_thrust(Y, fiberidx, X, mode);
+
+
+    exit(1);
 
     timer_setidx.stop();
     timer_setidx.print_elapsed_time("CUDA TTM SetIdx");
-    printf("Fiberidx length = %zu\n", fiberidx.size());
+    // std::printf("Y = %s\n", Y.to_string(1, 10).c_str());
+    // for (auto& e : Y.indices_thrust_h) {
+    //     std::cout << e.x << ' ' << e.y << ' ' << e.z << '\n';
+    // }
+    // std::cout << '\n';
+    // printf("Fiberidx length = %zu\n", fiberidx.size());
+    // for (const auto& e : fiberidx) std::cout << e << ' ';
+    // std::cout << '\n';
 
-    Scalar* X_values = X.values(cuda_dev->mem_node);
+    // Scalar* X_values = X.values(cuda_dev->mem_node);
     Scalar* Y_values = Y.values(cuda_dev->mem_node);
-    Scalar* U_values = U.values(cuda_dev->mem_node);
-    size_t* X_indices_m = X.indices[mode](cuda_dev->mem_node);
+    // Scalar* U_values = U.values(cuda_dev->mem_node);
+    // size_t* X_indices_m = X.indices[mode](cuda_dev->mem_node);
     size_t *dev_fiberidx = (size_t *) session.mem_nodes[cuda_dev->mem_node]->malloc(fiberidx.size() * sizeof (size_t));
     session.mem_nodes[cuda_dev->mem_node]->memcpy_from(dev_fiberidx, fiberidx.data(), *session.mem_nodes[cpu], fiberidx.size() * sizeof (size_t));
+
+
+    Scalar* X_values = thrust::raw_pointer_cast(&X.values_thrust_d[0]);
+    // Scalar* Y_values = thrust::raw_pointer_cast(&Y.values_thrust_d[0]);
+    Scalar* U_values = U.values(cuda_dev->mem_node);
+    size_t* X_indices_m = thrust::raw_pointer_cast(&thrust::get<0>(X.zip_it_d[0]));
+    // size_t *dev_fiberidx = (size_t *) session.mem_nodes[cuda_dev->mem_node]->malloc(fiberidx.size() * sizeof (size_t));
+    // session.mem_nodes[cuda_dev->mem_node]->memcpy_from(dev_fiberidx, fiberidx.data(), *session.mem_nodes[cpu], fiberidx.size() * sizeof (size_t));
+
 
     size_t Y_subchunk_size = X.chunk_size;
     size_t Y_num_subchunks = Y.strides(cpu)[mode];

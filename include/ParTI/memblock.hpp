@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PTI_MEMBLOCK_INCLUDED
-#define PTI_MEMBLOCK_INCLUDED
+#ifndef MEMBLOCK_H
+#define MEMBLOCK_H
 
 #include <cstddef>
 #include <ParTI/memnode.hpp>
@@ -288,4 +288,4 @@ public:
 
 }
 
-#endif
+#endif /* MEMBLOCK_H */

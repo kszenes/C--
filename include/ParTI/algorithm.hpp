@@ -68,6 +68,12 @@ void set_semisparse_indices_by_sparse_ref(
     size_t mode
 );
 
+void set_semisparse_indices_by_sparse_ref_thrust(
+    SparseTensor& dest,
+    std::vector<size_t>& fiber_idx,
+    SparseTensor& ref,
+    size_t mode
+);
 
 void set_semisparse_indices_by_sparse_ref_scan_seq(
     SparseTensor& dest,

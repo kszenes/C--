@@ -27,7 +27,6 @@
 using namespace pti;
 
 
-
 int main(int argc, char const* argv[]) {
     size_t mode = 0;
     bool dense_format = false;
@@ -67,19 +66,22 @@ int main(int argc, char const* argv[]) {
             ++number_of_lines;
     printf("nnz(X) = %u\n", number_of_lines - 2);
     SparseTensor X = SparseTensor::load(fX, 1, number_of_lines - 2);
-    for (auto& e : X.indices_thrust_h) {
-        std::cout << e.x << ' ' << e.y << ' ' << e.z << '\n';
-    }
-    X.sort_thrust();
-    std::cout << "Sorted with Thrust\n";
-    for (auto& e : X.indices_thrust_h) {
-        std::cout << e.x << ' ' << e.y << ' ' << e.z << '\n';
-    }
-    std::cout << '\n';
     fLines.fclose();
     fX.fclose();
-
     std::printf("X = %s\n", X.to_string(!dense_format, limit).c_str());
+    
+    // Timer sort_timer(cpu);
+    // sort_timer.start();
+    // X.sort_thrust(true);
+    // sort_timer.stop();
+    // sort_timer.print_elapsed_time("CUDA Sort Thrust");
+
+    // sort_timer.start();
+    // thrust::device_vector<ulong> mode_m(X.indices_thrust_d.size());
+    // sort_timer.stop();
+    // sort_timer.print_elapsed_time("CUDA Get mode-m Thrust");
+
+    // exit(1);
 
     CFile fU(args[1], "r");
     Tensor U = Tensor::load(fU);

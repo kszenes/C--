@@ -44,9 +44,12 @@ void SparseTensor::put(size_t const location, size_t const coord[], Scalar value
         }
     }
 
-    indices_thrust_h[location] = {coord[0], coord[1], coord[2]};
+    mode0_h[location] = coord[0];
+    mode1_h[location] = coord[1];
+    mode2_h[location] = coord[2];
 
     values(cpu)[location * chunk_size] = value;
+    values_thrust_h[location] = value;
     ++num_chunks;
 }
 

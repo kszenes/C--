@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PTI_SPTENSOR_INCLUDED
-#define PTI_SPTENSOR_INCLUDED
+#ifndef SPTENSOR_H
+#define SPTENSOR_H
 
 #include <cstddef>
 #include <cstdio>
@@ -48,10 +48,23 @@ struct SparseTensor : public BaseTensor {
     size_t num_chunks;
 
     MemBlock<size_t[]>* indices;
-    thrust::host_vector<ulong3> indices_thrust_h;
-    thrust::device_vector<ulong3> indices_thrust_d;
+    
+    thrust::host_vector<ulong> mode0_h;
+    thrust::host_vector<ulong> mode1_h;
+    thrust::host_vector<ulong> mode2_h;
+    thrust::device_vector<ulong> mode0_d;
+    thrust::device_vector<ulong> mode1_d;
+    thrust::device_vector<ulong> mode2_d;
+    using IntIterator = thrust::device_vector<ulong>::iterator;
+    using IteratorTuple = thrust::tuple<IntIterator, IntIterator, IntIterator>;
+    using IndexTuple = thrust::tuple<ulong, ulong, ulong>;
+    using  ZipIterator = thrust::zip_iterator<IteratorTuple>;
+
+    ZipIterator zip_it_d;
 
     MemBlock<Scalar[]> values;
+    thrust::host_vector<Scalar> values_thrust_h;
+    thrust::device_vector<Scalar> values_thrust_d;
 
 public:
 
@@ -97,4 +110,4 @@ public:
 
 }
 
-#endif
+#endif /* SPTENSOR_H */

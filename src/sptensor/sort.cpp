@@ -95,35 +95,42 @@ void SparseTensor::sort_index(size_t const sparse_order[]) {
     quick_sort_index(*this, 0, num_chunks, swap_buffer.get());
 }
 
-struct sort_indices_thrust {
-    // 3d
-    __device__ __host__ bool operator()(const ulong3 &a, const ulong3 &b){
-        return (a.y < b.y) || (a.y == b.y && a.z < b.z);
-    }
-    // 4d
-    // __device__ __host__ bool operator()(const Color &a, const Color &b){
-    //     return (a.y < b.y) || (a.y == b.y && a.z < b.z) || (a.y == b.y && a.z == b.z && a.w < b.w);
-    // }
-    // 2d (a.y < b.y)
-    // 3d (a.y < b.y) || (a.y == b.y && a.z < b.z)
-};
+// struct sort_indices_thrust {
+//     // 3d
+//     __device__ __host__ bool operator()(const ulong3 &a, const ulong3 &b){
+//         return (a.y < b.y) || (a.y == b.y && a.z < b.z);
+//     }
+//     // 4d
+//     // __device__ __host__ bool operator()(const Color &a, const Color &b){
+//     //     return (a.y < b.y) || (a.y == b.y && a.z < b.z) || (a.y == b.y && a.z == b.z && a.w < b.w);
+//     // }
+//     // 2d (a.y < b.y)
+//     // 3d (a.y < b.y) || (a.y == b.y && a.z < b.z)
+// };
 
 void SparseTensor::sort_thrust(bool cuda_dev) {
+    auto sort_zip_mode0 = []__host__ __device__ (
+        const IndexTuple& a, const IndexTuple& b 
+    ) {
+        return (thrust::get<1>(a) < thrust::get<1>(b)) ||
+               (thrust::get<1>(a) == thrust::get<1>(b) && thrust::get<2>(a) < thrust::get<2>(b));
+    };
 
     if (cuda_dev) {
-        thrust::sort(
-            indices_thrust_d.begin(),
-            indices_thrust_d.end(),
-            pti::sort_indices_thrust()
+        thrust::sort_by_key(
+            zip_it_d, zip_it_d + chunk_size * num_chunks,
+            values_thrust_d.begin(),
+            sort_zip_mode0
         );
     }
-    else {
-        thrust::sort(
-            indices_thrust_h.begin(),
-            indices_thrust_h.end(),
-            pti::sort_indices_thrust()
-        );
-    }
+    // else {
+    //     thrust::sort_by_key(
+    //         indices_thrust_h.begin(),
+    //         indices_thrust_h.end(),
+    //         values_thrust_h.begin(),
+    //         pti::sort_indices_thrust()
+    //     );
+    // }
 
 }
 

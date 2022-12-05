@@ -44,8 +44,16 @@ SparseTensor SparseTensor::load(std::FILE* fp, size_t start_index, size_t n_line
     // preallocate space
     if (n_lines) {
         tensor.reserve(n_lines);
-        tensor.indices_thrust_h = thrust::host_vector<ulong3>(n_lines);
-        tensor.indices_thrust_d = thrust::device_vector<ulong3>(n_lines);
+        tensor.values_thrust_h = thrust::host_vector<Scalar>(n_lines);
+        tensor.values_thrust_d = thrust::device_vector<Scalar>(n_lines);
+
+        tensor.mode0_h = thrust::host_vector<ulong>(n_lines);
+        tensor.mode1_h = thrust::host_vector<ulong>(n_lines);
+        tensor.mode2_h = thrust::host_vector<ulong>(n_lines);
+        tensor.mode0_d = thrust::device_vector<ulong>(n_lines);
+        tensor.mode1_d = thrust::device_vector<ulong>(n_lines);
+        tensor.mode2_d = thrust::device_vector<ulong>(n_lines);
+
     }
 
     int i = 0;
@@ -65,6 +73,14 @@ SparseTensor SparseTensor::load(std::FILE* fp, size_t start_index, size_t n_line
 
     }
     ptiCheckOSError(io_result != 1 && !std::feof(fp));
+    tensor.mode0_d = tensor.mode0_h;
+    tensor.mode1_d = tensor.mode1_h;
+    tensor.mode2_d = tensor.mode2_h;
+    tensor.values_thrust_d = tensor.values_thrust_h;
+
+    tensor.zip_it_d = thrust::make_zip_iterator(thrust::make_tuple(
+        tensor.mode0_d.begin(), tensor.mode1_d.begin(), tensor.mode2_d.begin()
+    ));
 
     // tensor.sort_index();
 

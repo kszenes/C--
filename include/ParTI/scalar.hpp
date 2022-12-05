@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PTI_SCALAR_INCLUDED
-#define PTI_SCALAR_INCLUDED
+#ifndef SCALAR_H
+#define SCALAR_H
 
 namespace pti {
 
@@ -25,4 +25,4 @@ typedef float Scalar;
 
 }
 
-#endif
+#endif /* SCALAR_H */

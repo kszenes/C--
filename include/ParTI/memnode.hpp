@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PTI_MEMNODE_INCLUDED
-#define PTI_MEMNODE_INCLUDED
+#ifndef MEMNODE_H
+#define MEMNODE_H
 
 #include <cstdio>
 #include <new>
@@ -158,4 +158,4 @@ struct ClMemNode : public MemNode {
 
 }
 
-#endif
+#endif /* MEMNODE_H */

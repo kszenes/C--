@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PTI_BASE_TENSOR_INCLUDED
-#define PTI_BASE_TENSOR_INCLUDED
+#ifndef BASE_TENSOR_H
+#define BASE_TENSOR_H
 
 #include <cstddef>
 #include <ParTI/memblock.hpp>
@@ -34,4 +34,4 @@ struct BaseTensor {
 
 }
 
-#endif
+#endif /* BASE_TENSOR_H */
