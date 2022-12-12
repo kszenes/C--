@@ -79,6 +79,7 @@ public:
     SparseTensor& operator= (Tensor&& other);
 
     SparseTensor clone();
+    void clone_thrust(SparseTensor& result);
     SparseTensor& reset(size_t nmodes, size_t const shape[], bool const is_dense[]);
 
     bool offset_to_indices(size_t indices[], size_t offset);
@@ -88,7 +89,7 @@ public:
 
     static SparseTensor load(std::FILE* fp, size_t start_index = 0, size_t n_lines = 0);
 
-    std::string to_string(bool sparse_format, size_t limit = 0);
+    std::string to_string(bool sparse_format, size_t limit = 0, bool use_thrust=true);
 
     void append(size_t const coord[], Scalar const value[]);
     void append(size_t const coord[], Scalar value);
@@ -101,6 +102,7 @@ public:
     void sort_index(size_t const sparse_order[]);
 
     void sort_thrust(bool cuda_dev=true, int mode=0);
+    void sort_thrust(bool cuda_dev, IndexType const sparse_order[]);
 
     SparseTensor to_fully_sparse();
     SparseTensor to_fully_dense();

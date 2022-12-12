@@ -38,17 +38,17 @@ void SparseTensor::put(size_t const location, size_t const coord[], Scalar const
 void SparseTensor::put(size_t const location, size_t const coord[], Scalar value) {
     ptiCheckError(chunk_size != 1, ERR_SHAPE_MISMATCH, "tensor is not fully sparse");
 
-    for(size_t m = 0; m < nmodes; ++m) {
-        if(!is_dense(cpu)[m]) {
-            indices[m](cpu)[location] = coord[m];
-        }
-    }
+    // for(size_t m = 0; m < nmodes; ++m) {
+    //     if(!is_dense(cpu)[m]) {
+    //         indices[m](cpu)[location] = coord[m];
+    //     }
+    // }
+    // values(cpu)[location * chunk_size] = value;
 
     for (int i = 0; i < 3; ++i) {
         modes_h[i][location] = coord[i];
     }
 
-    values(cpu)[location * chunk_size] = value;
     values_thrust_h[location] = value;
     ++num_chunks;
 }

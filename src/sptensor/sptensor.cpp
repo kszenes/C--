@@ -74,6 +74,50 @@ SparseTensor& SparseTensor::operator= (SparseTensor&& other) {
 
     return *this;
 }
+void SparseTensor::clone_thrust(SparseTensor& result) {
+    // nmodes
+    result.nmodes = nmodes;
+
+    // shape
+    result.shape = shape.clone(cpu);
+
+    // is_dense
+    result.is_dense = is_dense.clone(cpu);
+
+    // dense_order
+    result.dense_order = dense_order.clone(cpu);
+
+    // sparse_order
+    result.sparse_order = sparse_order.clone(cpu);
+
+    // strides
+    result.strides = strides.clone(cpu);
+
+    // chunk_size
+    result.chunk_size = chunk_size;
+
+    // num_chunks
+    result.num_chunks = num_chunks;
+
+    for (int i = 0; i < modes_d.size(); ++i) {
+        result.modes_d.emplace_back(values_thrust_d.size());
+        thrust::copy(
+            modes_d[i].begin(),
+            modes_d[i].end(),
+            result.modes_d[i].begin()
+        );
+    }
+
+    result.values_thrust_d = thrust::device_vector<Scalar>(values_thrust_d.size());
+    thrust::copy(
+        values_thrust_d.begin(),
+        values_thrust_d.end(),
+        result.values_thrust_d.begin()
+    );
+    result.zip_it_d = thrust::make_zip_iterator(thrust::make_tuple(
+        result.modes_d[0].begin(), result.modes_d[1].begin(), result.modes_d[2].begin()
+    ));
+}
 
 SparseTensor SparseTensor::clone() {
     SparseTensor result;

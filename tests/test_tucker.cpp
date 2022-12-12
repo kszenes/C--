@@ -55,7 +55,7 @@ int main(int argc, char const* argv[]) {
         return 1;
     }
 
-    // session.print_devices();
+    session.print_devices();
     Device* dev = session.devices[device];
     if(dynamic_cast<CudaDevice*>(dev) != nullptr) {
         std::printf("Using CUDA for calculation.\n");
@@ -67,7 +67,14 @@ int main(int argc, char const* argv[]) {
     }
 
     CFile fX(args[0], "r");
-    SparseTensor X = SparseTensor::load(fX, 1);
+    CFile fLines(args[0], "r");
+    int number_of_lines = 0;
+    int ch;
+    while (EOF != (ch=getc(fLines)))
+        if ('\n' == ch)
+            ++number_of_lines;
+    printf("nnz(X) = %u\n", number_of_lines - 2);
+    SparseTensor X = SparseTensor::load(fX, 1, number_of_lines - 2);
     fX.fclose();
 
     std::printf("X = %s\n\n", X.to_string(!dense_format, limit).c_str());

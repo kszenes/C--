@@ -25,15 +25,23 @@ namespace pti {
 
 namespace {
 
-double sqnorm_fully_sparse(SparseTensor &tensor, Device *device) {
+double sqnorm_fully_sparse(SparseTensor &tensor, Device *device, bool use_thrust=true) {
     (void) device;
 
     double sqnorm = 0;
-    const Scalar *values = tensor.values(cpu);
+    if (use_thrust) {
+      sqnorm = thrust::reduce(
+        tensor.values_thrust_d.begin(), tensor.values_thrust_d.end(),
+        0, thrust::multiplies<Scalar>()
+      );
+    } else {
+        const Scalar *values = tensor.values(cpu);
 
-    for(size_t i = 0; i < tensor.num_chunks; ++i) {
-        double cell_value = values[i * tensor.chunk_size];
-        sqnorm += cell_value * cell_value;
+        for(size_t i = 0; i < tensor.num_chunks; ++i) {
+            double cell_value = values[i * tensor.chunk_size];
+            sqnorm += cell_value * cell_value;
+        }
+
     }
 
     return sqnorm;

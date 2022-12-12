@@ -108,6 +108,65 @@ void SparseTensor::sort_index(IndexType const sparse_order[]) {
 //     // 3d (a.y < b.y) || (a.y == b.y && a.z < b.z)
 // };
 
+void SparseTensor::sort_thrust(bool cuda_dev, IndexType const sparse_order[]) {
+    std::memcpy(this->sparse_order(cpu), sparse_order, this->sparse_order.size() * sizeof (IndexType));
+    IndexType mode = sparse_order[0];
+    if (cuda_dev) {
+        if (mode == 0) {
+            thrust::sort_by_key(
+                zip_it_d, zip_it_d + chunk_size * num_chunks,
+                values_thrust_d.begin(),
+                []__host__ __device__ (
+                const IndexTuple& a, const IndexTuple& b 
+            ) {
+                return (thrust::get<0>(a) < thrust::get<0>(b)) ||
+                    (thrust::get<0>(a) == thrust::get<0>(b) && thrust::get<2>(a) < thrust::get<2>(b)) ||
+                    (thrust::get<0>(a) == thrust::get<0>(b) &&
+                    thrust::get<2>(a) == thrust::get<2>(b) &&
+                    thrust::get<1>(a) < thrust::get<1>(b));
+              }
+            );
+        } else if (mode == 1) {
+            thrust::sort_by_key(
+                zip_it_d, zip_it_d + chunk_size * num_chunks,
+                values_thrust_d.begin(),
+                []__host__ __device__ (
+                const IndexTuple& a, const IndexTuple& b 
+            ) {
+                return (thrust::get<1>(a) < thrust::get<1>(b)) ||
+                    (thrust::get<1>(a) == thrust::get<1>(b) && thrust::get<2>(a) < thrust::get<2>(b)) ||
+                    (thrust::get<1>(a) == thrust::get<1>(b) &&
+                    thrust::get<2>(a) == thrust::get<2>(b) &&
+                    thrust::get<0>(a) < thrust::get<0>(b));
+              }
+            );
+        } else if (mode == 2) {
+            thrust::sort_by_key(
+                zip_it_d, zip_it_d + chunk_size * num_chunks,
+                values_thrust_d.begin(),
+                []__host__ __device__ (
+                const IndexTuple& a, const IndexTuple& b 
+            ) {
+                return (thrust::get<2>(a) < thrust::get<2>(b)) ||
+                    (thrust::get<2>(a) == thrust::get<2>(b) && thrust::get<1>(a) < thrust::get<1>(b)) ||
+                    (thrust::get<2>(a) == thrust::get<2>(b) &&
+                    thrust::get<1>(a) == thrust::get<1>(b) &&
+                    thrust::get<0>(a) < thrust::get<0>(b));
+              }
+            );
+
+        }
+    }
+    // else {
+    //     thrust::sort_by_key(
+    //         indices_thrust_h.begin(),
+    //         indices_thrust_h.end(),
+    //         values_thrust_h.begin(),
+    //         pti::sort_indices_thrust()
+    //     );
+    // }
+
+}
 void SparseTensor::sort_thrust(bool cuda_dev, int mode) {
     if (cuda_dev) {
         if (mode == 0) {

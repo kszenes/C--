@@ -54,10 +54,10 @@ int compare_indices(SparseTensor& tsr, size_t i, size_t j, size_t except) {
 }
 void set_semisparse_indices_by_sparse_ref_thrust(SparseTensor& dest, thrust::device_vector<IndexType>& fiber_idx, SparseTensor& ref, size_t mode) {
     thrust::sequence(fiber_idx.begin(), fiber_idx.end(), 0);
-
     if (mode == 0) {
+        for (const auto& e : fiber_idx) std::cout << e << ' ';
         auto ret = thrust::unique_by_key(
-            ref.zip_it_d, ref.zip_it_d + ref.num_chunks + ref.chunk_size,
+            ref.zip_it_d, ref.zip_it_d + ref.num_chunks * ref.chunk_size,
             fiber_idx.begin(),
             []__device__(
                 const thrust::tuple<IndexType, IndexType, IndexType>& a,
@@ -67,10 +67,17 @@ void set_semisparse_indices_by_sparse_ref_thrust(SparseTensor& dest, thrust::dev
                             && thrust::get<2>(a) == thrust::get<2>(b);
                 }
         );
+        dest.modes_d.emplace_back(ref.modes_d[1]);
+        dest.modes_d.emplace_back(ref.modes_d[2]);
+        dest.modes_d[0].resize(*ret.second);
+        dest.modes_d[1].resize(*ret.second);
         fiber_idx[*ret.second - 1] = fiber_idx.size();
+        fiber_idx.resize(*ret.second);
+        dest.num_chunks = *ret.second - 1;
+        dest.values_thrust_d = thrust::device_vector<Scalar>(dest.num_chunks * dest.chunk_size);
     } else if (mode == 1) {
         auto ret = thrust::unique_by_key(
-            ref.zip_it_d, ref.zip_it_d + ref.num_chunks + ref.chunk_size,
+            ref.zip_it_d, ref.zip_it_d + ref.num_chunks * ref.chunk_size,
             fiber_idx.begin(),
             []__device__(
                 const thrust::tuple<IndexType, IndexType, IndexType>& a,
@@ -80,10 +87,18 @@ void set_semisparse_indices_by_sparse_ref_thrust(SparseTensor& dest, thrust::dev
                             && thrust::get<2>(a) == thrust::get<2>(b);
                 }
         );
+        // std::cout << "\nret: " << *ret.first << ' ' << *ret.second << '\n';
+        dest.modes_d.emplace_back(ref.modes_d[0]);
+        dest.modes_d.emplace_back(ref.modes_d[2]);
+        dest.modes_d[0].resize(*ret.second);
+        dest.modes_d[1].resize(*ret.second);
         fiber_idx[*ret.second - 1] = fiber_idx.size();
+        fiber_idx.resize(*ret.second);
+        dest.num_chunks = *ret.second - 1;
+        dest.values_thrust_d = thrust::device_vector<Scalar>(dest.num_chunks * dest.chunk_size);
     } else if (mode == 2) {
         auto ret = thrust::unique_by_key(
-            ref.zip_it_d, ref.zip_it_d + ref.num_chunks + ref.chunk_size,
+            ref.zip_it_d, ref.zip_it_d + ref.num_chunks * ref.chunk_size,
             fiber_idx.begin(),
             []__device__(
                 const thrust::tuple<IndexType, IndexType, IndexType>& a,
@@ -93,11 +108,19 @@ void set_semisparse_indices_by_sparse_ref_thrust(SparseTensor& dest, thrust::dev
                             && thrust::get<1>(a) == thrust::get<1>(b);
                 }
         );
+        dest.modes_d.push_back(std::move(ref.modes_d[0]));
+        dest.modes_d.push_back(std::move(ref.modes_d[1]));
+        dest.modes_d[0].resize(*ret.second);
+        dest.modes_d[1].resize(*ret.second);
         fiber_idx[*ret.second - 1] = fiber_idx.size();
+        fiber_idx.resize(*ret.second);
+        dest.num_chunks = *ret.second - 1;
+        dest.values_thrust_d = thrust::device_vector<Scalar>(dest.num_chunks * dest.chunk_size);
+        
     }
 
-    for (const auto& e : fiber_idx) std::cout << e << ' ';
-    std::cout << '\n';
+    // for (const auto& e : fiber_idx) std::cout << e << ' ';
+    // std::cout << '\n';
 }
 
 void set_semisparse_indices_by_sparse_ref(SparseTensor& dest, std::vector<size_t>& fiber_idx, SparseTensor& ref, size_t mode) {

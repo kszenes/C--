@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
 project(ParTI)
 
-set(TEST_SRCS "test_ttm.cpp")
+set(TEST_SRCS "test_ttm.cpp" "test_tucker.cpp")
 
 foreach(TEST_SRC IN LISTS TEST_SRCS)
     get_filename_component(TEST_EXE "${TEST_SRC}" NAME_WE)

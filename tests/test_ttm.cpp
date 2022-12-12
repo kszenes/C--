@@ -68,11 +68,9 @@ int main(int argc, char const* argv[]) {
     SparseTensor X = SparseTensor::load(fX, 1, number_of_lines - 2);
     fLines.fclose();
     fX.fclose();
-    std::printf("X = %s\n", X.to_string(!dense_format, limit).c_str());
-
-    for (int i = 0; i < number_of_lines - 2; ++i) {
-        std::cout << X.modes_d[0][i] << ' ' << X.modes_d[1][i] << ' ' << X.modes_d[2][i] << ' ' << X.values_thrust_d[i] << '\n';
-    }
+    // for (int i = 0; i < number_of_lines - 2; ++i) {
+    //     std::cout << X.modes_d[0][i] << ' ' << X.modes_d[1][i] << ' ' << X.modes_d[2][i] << ' ' << X.values_thrust_d[i] << '\n';
+    // }
     // Timer sort_timer(cpu);
     // sort_timer.start();
     // X.sort_thrust(true);
@@ -100,7 +98,7 @@ int main(int argc, char const* argv[]) {
     SparseTensor Y = tensor_times_matrix(X, U, mode, session.devices[device]);
     timer.stop();
 
-    std::printf("Y = %s\n", Y.to_string(!dense_format, limit).c_str());
+    std::printf("Y = %s\n", Y.to_string(!dense_format, limit, true).c_str());
     timer.print_elapsed_time("TTM");
 
     if(args.size() == 3) {

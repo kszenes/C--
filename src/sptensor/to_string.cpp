@@ -43,7 +43,7 @@ int compare_indices(size_t const i[], size_t const j[], size_t const mode_order[
 
 }
 
-std::string SparseTensor::to_string(bool sparse_format, size_t limit) {
+std::string SparseTensor::to_string(bool sparse_format, size_t limit, bool use_thrust) {
     std::string result = "pti::SparseTensor(\n  shape = [";
     result += array_to_string(shape(cpu), nmodes);
     result += "], strides = [";
@@ -69,14 +69,25 @@ std::string SparseTensor::to_string(bool sparse_format, size_t limit) {
                 result += ",\n";
             }
             result += "    (";
+            int index = 0;
             for(size_t m = 0; m < nmodes; ++m) {
                 if(m != 0) {
                     result += ", ";
                 }
-                if(is_dense(cpu)[m]) {
-                    result += ':';
+                if (use_thrust) {
+                    if(is_dense(cpu)[m]) {
+                        result += ':';
+                        --index;
+                    } else {
+                        result += std::to_string(modes_d[index][i]);
+                    }
+                    ++index;
                 } else {
-                    result += std::to_string(indices[m](cpu)[i]);
+                    if(is_dense(cpu)[m]) {
+                        result += ':';
+                    } else {
+                            result += std::to_string(indices[m](cpu)[i]);
+                    }
                 }
             }
             result += "): [";
@@ -88,7 +99,12 @@ std::string SparseTensor::to_string(bool sparse_format, size_t limit) {
                 if(j != 0) {
                     result += ", ";
                 }
-                Scalar value = values(cpu)[i * chunk_size + j];
+                Scalar value = 0.0;
+                if (use_thrust) {
+                    value = values_thrust_d[i * chunk_size + j];
+                } else {
+                    value = values(cpu)[i * chunk_size + j];
+                }
                 if(value >= 0) {
                     result += ' ';
                 }

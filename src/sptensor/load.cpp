@@ -43,7 +43,7 @@ SparseTensor SparseTensor::load(std::FILE* fp, size_t start_index, size_t n_line
     SparseTensor tensor(nmodes, coordinate.get(), mode_is_dense.get());
     // preallocate space
     if (n_lines) {
-        tensor.reserve(n_lines);
+        // tensor.reserve(n_lines);
         tensor.values_thrust_h = thrust::host_vector<Scalar>(n_lines);
         tensor.values_thrust_d = thrust::device_vector<Scalar>(n_lines);
 
@@ -82,7 +82,7 @@ SparseTensor SparseTensor::load(std::FILE* fp, size_t start_index, size_t n_line
     tensor.zip_it_d = thrust::make_zip_iterator(thrust::make_tuple(
         tensor.modes_d[0].begin(), tensor.modes_d[1].begin(), tensor.modes_d[2].begin()
     ));
-    tensor.sort_thrust(true);
+    // tensor.sort_thrust(true);
 
     // tensor.sort_index();
 

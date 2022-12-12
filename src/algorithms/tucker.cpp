@@ -123,8 +123,8 @@ SparseTensor tucker_decomposition(
     size_t U_shape[2];
     for(size_t ni = 1; ni < N; ++ni) {
         size_t n = dimorder[ni];
-        U_shape[0] = R[n];
-        U_shape[1] = X.shape(cpu)[n];
+        U_shape[1] = R[n];
+        U_shape[0] = X.shape(cpu)[n];
         U[n].reset(2, U_shape);
         if(false && init == TUCKER_INIT_NVECS) {
             U[n] = nvecs(X, n, R[n], device);
@@ -149,8 +149,12 @@ SparseTensor tucker_decomposition(
             }
         }
         sort_order[0] = n;
-        X_sort_cache[n] = X.clone();
-        X_sort_cache[n].sort_index(sort_order.get());
+        // X_sort_cache[n] = X.clone();
+        // X_sort_cache[n].sort_index(sort_order.get());
+        X.clone_thrust(X_sort_cache[n]);
+        X_sort_cache[n].sort_thrust(true, sort_order.get());
+        std::printf("Sorted mode %d, X = %s\n", n, X_sort_cache[n].to_string(true, 10, true).c_str());
+
         timer_sort_i.stop();
         timer_sort_i.print_elapsed_time("Tucker Sort");
     }
@@ -180,7 +184,7 @@ SparseTensor tucker_decomposition(
                 if(m != n) {
                     std::printf("[Tucker Decomp]: Iter %u, n = %zu, m = %zu\n", iter, n, m);
                     std::fflush(stdout);
-                    Utilde_next = tensor_times_matrix(*Utilde, U[m], m, device, true);
+                    Utilde_next = tensor_times_matrix(X_sort_cache[n], U[m], m, device, true);
                     Utilde = &Utilde_next;
                 }
             }

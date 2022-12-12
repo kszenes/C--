@@ -161,35 +161,39 @@ SparseTensor tensor_times_matrix_cuda(SparseTensor& X, Tensor& U, IndexType mode
 
     ptiCheckError(X.shape(cpu)[mode] != nrows, ERR_SHAPE_MISMATCH, "X.shape[mode] != U.ncols");
 
-    if(skip_sort) {
+    // if(skip_sort) {
+    //     ptiCheckError(X.sparse_order(cpu)[nspmodes - 1] != mode, ERR_SHAPE_MISMATCH, "X.sparse_order[-1] != mode");
+    // } else {
+    //     Timer timer_sort(cpu);
+    //     timer_sort.start();
+
+    //     std::unique_ptr<IndexType[]> sort_order(new IndexType [nspmodes]);
+    //     for(IndexType m = 0, i = 0; m < nspmodes; ++m) {
+    //         IndexType sort_order_mode = X.sparse_order(cpu)[m];
+    //         if(sort_order_mode != mode) {
+    //             sort_order[i] = sort_order_mode;
+    //             ++i;
+    //         }
+    //     }
+    //     sort_order[nspmodes - 1] = mode;
+    //     X.sort_index(sort_order.get());
+
+    //     timer_sort.stop();
+    //     timer_sort.print_elapsed_time("CUDA TTM Sort");
+    // }
+    // for (int i = 0; i < X.num_chunks * X.chunk_size; ++i) {
+    //     std::cout << X.modes_d[0][i] << ' ' << X.modes_d[1][i] << ' ' << X.modes_d[2][i] << ' ' << X.values_thrust_d[i] << '\n';
+    // }
+    if (skip_sort) {
         ptiCheckError(X.sparse_order(cpu)[nspmodes - 1] != mode, ERR_SHAPE_MISMATCH, "X.sparse_order[-1] != mode");
     } else {
-        Timer timer_sort(cpu);
-        timer_sort.start();
-
-        std::unique_ptr<IndexType[]> sort_order(new IndexType [nspmodes]);
-        for(IndexType m = 0, i = 0; m < nspmodes; ++m) {
-            IndexType sort_order_mode = X.sparse_order(cpu)[m];
-            if(sort_order_mode != mode) {
-                sort_order[i] = sort_order_mode;
-                ++i;
-            }
-        }
-        sort_order[nspmodes - 1] = mode;
-        X.sort_index(sort_order.get());
-
-        timer_sort.stop();
-        timer_sort.print_elapsed_time("CUDA TTM Sort");
+        Timer timer_thrust(cpu);
+        timer_thrust.start();
+        X.sort_thrust(true, mode);
+        timer_thrust.stop();
+        timer_thrust.print_elapsed_time("THRUST SORT");
+        std::printf("X = %s\n", X.to_string(1, 10, true).c_str());
     }
-    for (int i = 0; i < X.num_chunks * X.chunk_size; ++i) {
-        std::cout << X.modes_d[0][i] << ' ' << X.modes_d[1][i] << ' ' << X.modes_d[2][i] << ' ' << X.values_thrust_d[i] << '\n';
-    }
-    Timer timer_thrust(cpu);
-    timer_thrust.start();
-    X.sort_thrust(true, mode);
-    timer_thrust.stop();
-    timer_thrust.print_elapsed_time("THRUST SORT");
-    std::printf("X = %s\n", X.to_string(1, 10).c_str());
 
     std::unique_ptr<IndexType[]> Y_shape(new IndexType [nmodes]);
     for(IndexType m = 0; m < nmodes; ++m) {
@@ -212,32 +216,32 @@ SparseTensor tensor_times_matrix_cuda(SparseTensor& X, Tensor& U, IndexType mode
         Y_dense_order[m] = X_dense_order[m];
     }
     Y_dense_order[Y.dense_order.size() - 1] = mode;
-    Y.sort_index(X.sparse_order(cpu));
+
+    // // Y.sort_index(X.sparse_order(cpu));
+    // Timer timer_setidx(cpu);
+    // timer_setidx.start();
+    // std::vector<IndexType> fiberidx;
+    // set_semisparse_indices_by_sparse_ref(Y, fiberidx, X, mode);
+    // for (const auto& e : fiberidx) std::cout << e << ' ';
+    // std::cout << '\n';
 
     Timer timer_setidx(cpu);
     timer_setidx.start();
-
-    std::vector<IndexType> fiberidx;
-    set_semisparse_indices_by_sparse_ref(Y, fiberidx, X, mode);
-    for (const auto& e : fiberidx) std::cout << e << ' ';
-    std::cout << '\n';
-
     thrust::device_vector<IndexType> contracted_mode(X.modes_d[mode]);
-
     thrust::device_vector<IndexType> fiberidx_thrust(X.chunk_size * X.num_chunks);
     set_semisparse_indices_by_sparse_ref_thrust(Y, fiberidx_thrust, X, mode);
-
-    for (int i = 0; i < X.modes_d[0].size(); ++i) {
-        std::cout << X.modes_d[0][i] << ' ' << X.modes_d[1][i] << ' ' << X.modes_d[2][i] << '\n';
-    }
-
-    std::cout << "Mode0:\n";
-    for (const auto& e : contracted_mode) std::cout << e << ' ';
-    std::cout << '\n';
-
-
     timer_setidx.stop();
-    timer_setidx.print_elapsed_time("CUDA TTM SetIdx");
+    timer_setidx.print_elapsed_time("THRUST TTM SetIdx");
+
+    // for (int i = 0; i < X.modes_d[0].size(); ++i) {
+    //     std::cout << X.modes_d[0][i] << ' ' << X.modes_d[1][i] << ' ' << X.modes_d[2][i] << '\n';
+    // }
+
+    // std::cout << "Contracted mode:\n";
+    // for (const auto& e : contracted_mode) std::cout << e << ' ';
+    // std::cout << '\n';
+
+
     // std::printf("Y = %s\n", Y.to_string(1, 10).c_str());
     // for (auto& e : Y.indices_thrust_h) {
     //     std::cout << e.x << ' ' << e.y << ' ' << e.z << '\n';
@@ -248,15 +252,14 @@ SparseTensor tensor_times_matrix_cuda(SparseTensor& X, Tensor& U, IndexType mode
     // std::cout << '\n';
 
     // Scalar* X_values = X.values(cuda_dev->mem_node);
-    Scalar* Y_values = Y.values(cuda_dev->mem_node);
+    // Scalar* Y_values = Y.values(cuda_dev->mem_node);
     // Scalar* U_values = U.values(cuda_dev->mem_node);
     // IndexType* X_indices_m = X.indices[mode](cuda_dev->mem_node);
     // IndexType *dev_fiberidx = (IndexType *) session.mem_nodes[cuda_dev->mem_node]->malloc(fiberidx.size() * sizeof (IndexType));
     // session.mem_nodes[cuda_dev->mem_node]->memcpy_from(dev_fiberidx, fiberidx.data(), *session.mem_nodes[cpu], fiberidx.size() * sizeof (IndexType));
 
-
     Scalar* X_values = thrust::raw_pointer_cast(&X.values_thrust_d[0]);
-    // Scalar* Y_values = thrust::raw_pointer_cast(&Y.values_thrust_d[0]);
+    Scalar* Y_values = thrust::raw_pointer_cast(&Y.values_thrust_d[0]);
     Scalar* U_values = U.values(cuda_dev->mem_node);
     IndexType* X_indices_m = thrust::raw_pointer_cast(&contracted_mode[0]);
     IndexType *dev_fiberidx = thrust::raw_pointer_cast(&fiberidx_thrust[0]);
@@ -305,8 +308,6 @@ SparseTensor tensor_times_matrix_cuda(SparseTensor& X, Tensor& U, IndexType mode
     printf("Y_nnz: %lu; Y_stride: %lu\n", Y.num_chunks, Y.chunk_size);
 
 
-
-
     Timer timer_kernel(cuda_dev->device_id);
     timer_kernel.start();
     IndexType kernel_blockDim_y = std::min(Y_subchunk_size, 1024 / Y_num_subchunks);
@@ -323,7 +324,6 @@ SparseTensor tensor_times_matrix_cuda(SparseTensor& X, Tensor& U, IndexType mode
     timer_kernel.stop();
     timer_kernel.print_elapsed_time("CUDA TTM Kernel");
     ptiCheckCUDAError(result != 0);
-
     // session.mem_nodes[cuda_dev->mem_node]->free(dev_fiberidx);
 
     return Y;
